@@ -9,21 +9,22 @@ public class Main {
             String path = new Scanner(System.in).nextLine();
             File file = new File(path);
             boolean fileExists = file.exists();
+            boolean isDirectory = file.isDirectory();
 
-            if (fileExists == true) {
-                boolean isDirectory = file.isDirectory();
-                if (isDirectory == false) {
-                    i++;
-                    System.out.println("Путь указан верно. Это файл номер " + i);
-                } else {
-                    System.out.println("Этот путь не до файла или неверно указан путь");
-                    continue;
-                }
-            } else {
+            if (fileExists == false) {
                 System.out.println("Этот путь не до файла или неверно указан путь");
                 continue;
+            }
+
+            if (isDirectory == true) {
+                System.out.println("Этот путь не до файла или неверно указан путь");
+                continue;
+            }
+
+            if (isDirectory == false) {
+                i++;
+                System.out.println("Путь указан верно. Это файл номер " + i);
             }
         }
     }
 }
-
