@@ -6,22 +6,23 @@ public class Main {
         String word = "infinitely";
         int i = 0;
         while (word != "Стоп") {
+            System.out.println("Пожалуйста введите путь до файла");
             String path = new Scanner(System.in).nextLine();
             File file = new File(path);
             boolean fileExists = file.exists();
             boolean isDirectory = file.isDirectory();
 
-            if (fileExists == false) {
-                System.out.println("Этот путь не до файла или неверно указан путь");
+            if (!fileExists) {
+                System.out.println("Этот путь указан неверно");
                 continue;
             }
 
-            if (isDirectory == true) {
-                System.out.println("Этот путь не до файла или неверно указан путь");
+            if (isDirectory) {
+                System.out.println("Этот путь не до файла, а до папки");
                 continue;
             }
 
-            if (isDirectory == false) {
+            if (!isDirectory) {
                 i++;
                 System.out.println("Путь указан верно. Это файл номер " + i);
             }
