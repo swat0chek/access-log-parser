@@ -1,4 +1,5 @@
 import java.io.*;
+import java.time.LocalDateTime;
 import java.util.Scanner;
 
 class LineTooLongException extends RuntimeException {
@@ -39,6 +40,8 @@ public class Main {
             int yandexBotCount = 0;
             int googleBotCount = 0;
 
+            Statistics stats = new Statistics();
+
             try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
                 String line;
 
@@ -53,31 +56,20 @@ public class Main {
 
                     totalLines++;
 
-                    int lastQuoteIndex = line.lastIndexOf('"');
-                    if (lastQuoteIndex != -1) {
-                        int secondLastQuoteIndex = line.lastIndexOf('"', lastQuoteIndex - 1);
-                        if (secondLastQuoteIndex != -1) {
-                            String userAgent = line.substring(secondLastQuoteIndex + 1, lastQuoteIndex);
+                    try {
+                        LogEntry entry = new LogEntry(line);
+                        stats.addEntry(entry);
 
-                            int startBracket = userAgent.indexOf('(');
-                            int endBracket = userAgent.indexOf(')', startBracket);
+                        UserAgent userAgent = entry.getUserAgent();
+                        String userAgentStr = line.substring(line.lastIndexOf('"') + 1);
 
-                            if (startBracket != -1 && endBracket != -1) {
-                                String firstBrackets = userAgent.substring(startBracket + 1, endBracket);
-                                String[] parts = firstBrackets.split(";");
-
-                                for (String part : parts) {
-                                    part = part.trim();
-                                    if (part.startsWith("Googlebot")) {
-                                        googleBotCount++;
-                                        break;
-                                    } else if (part.startsWith("YandexBot")) {
-                                        yandexBotCount++;
-                                        break;
-                                    }
-                                }
-                            }
+                        if (userAgentStr.contains("Googlebot")) {
+                            googleBotCount++;
+                        } else if (userAgentStr.contains("YandexBot")) {
+                            yandexBotCount++;
                         }
+                    } catch (IllegalArgumentException e) {
+                        System.err.println("Пропущена некорректная строка: " + e.getMessage());
                     }
                 }
 
@@ -90,6 +82,7 @@ public class Main {
 
                     System.out.printf("Доля запросов от YandexBot: %.2f%%\n", yandexBotRatio);
                     System.out.printf("Доля запросов от Googlebot: %.2f%%\n", googleBotRatio);
+                    System.out.printf("Средний трафик за час: %.2f байт/час\n", stats.getTrafficRate());
                 } else {
                     System.out.println("Файл пуст.");
                 }
