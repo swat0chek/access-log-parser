@@ -12,8 +12,8 @@ public class Main {
         String word = "infinitely";
         int i = 0;
 
-        while (word != "Стоп") {
-            System.out.println("Пожалуйста введите путь до файла");
+        while (!word.equals("Стоп")) {
+            System.out.println("Пожалуйста, введите путь до файла");
             String path = new Scanner(System.in).nextLine();
 
             File file = new File(path);
@@ -36,12 +36,10 @@ public class Main {
             }
 
             int totalLines = 0;
-            int maxLength = Integer.MIN_VALUE;
-            int minLength = Integer.MAX_VALUE;
+            int yandexBotCount = 0;
+            int googleBotCount = 0;
 
-            try {
-                FileReader fileReader = new FileReader(path);
-                BufferedReader reader = new BufferedReader(fileReader);
+            try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
                 String line;
 
                 while ((line = reader.readLine()) != null) {
@@ -54,18 +52,47 @@ public class Main {
                     }
 
                     totalLines++;
-                    maxLength = Math.max(maxLength, length);
-                    minLength = Math.min(minLength, length);
+
+                    int lastQuoteIndex = line.lastIndexOf('"');
+                    if (lastQuoteIndex != -1) {
+                        int secondLastQuoteIndex = line.lastIndexOf('"', lastQuoteIndex - 1);
+                        if (secondLastQuoteIndex != -1) {
+                            String userAgent = line.substring(secondLastQuoteIndex + 1, lastQuoteIndex);
+
+                            int startBracket = userAgent.indexOf('(');
+                            int endBracket = userAgent.indexOf(')', startBracket);
+
+                            if (startBracket != -1 && endBracket != -1) {
+                                String firstBrackets = userAgent.substring(startBracket + 1, endBracket);
+                                String[] parts = firstBrackets.split(";");
+
+                                for (String part : parts) {
+                                    part = part.trim();
+                                    if (part.startsWith("Googlebot")) {
+                                        googleBotCount++;
+                                        break;
+                                    } else if (part.startsWith("YandexBot")) {
+                                        yandexBotCount++;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
-
-
-                reader.close();
-                fileReader.close();
 
                 System.out.println("\n--- Результаты анализа файла ---");
                 System.out.println("Общее количество строк в файле: " + totalLines);
-                System.out.println("Длина самой длинной строки: " + maxLength);
-                System.out.println("Длина самой короткой строки: " + (minLength == Integer.MAX_VALUE ? 0 : minLength));
+
+                if (totalLines > 0) {
+                    double yandexBotRatio = (double) yandexBotCount / totalLines * 100;
+                    double googleBotRatio = (double) googleBotCount / totalLines * 100;
+
+                    System.out.printf("Доля запросов от YandexBot: %.2f%%\n", yandexBotRatio);
+                    System.out.printf("Доля запросов от Googlebot: %.2f%%\n", googleBotRatio);
+                } else {
+                    System.out.println("Файл пуст.");
+                }
                 System.out.println("-------------------------------\n");
 
             } catch (FileNotFoundException e) {
