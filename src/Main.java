@@ -1,5 +1,4 @@
 import java.io.*;
-import java.time.LocalDateTime;
 import java.util.Scanner;
 
 class LineTooLongException extends RuntimeException {
@@ -13,8 +12,8 @@ public class Main {
         String word = "infinitely";
         int i = 0;
 
-        while (!word.equals("Стоп")) {
-            System.out.println("Пожалуйста, введите путь до файла");
+        while (word != "Стоп") {
+            System.out.println("Пожалуйста введите путь до файла");
             String path = new Scanner(System.in).nextLine();
 
             File file = new File(path);
@@ -37,12 +36,12 @@ public class Main {
             }
 
             int totalLines = 0;
-            int yandexBotCount = 0;
-            int googleBotCount = 0;
+            int maxLength = Integer.MIN_VALUE;
+            int minLength = Integer.MAX_VALUE;
 
-            Statistics stats = new Statistics();
-
-            try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
+            try {
+                FileReader fileReader = new FileReader(path);
+                BufferedReader reader = new BufferedReader(fileReader);
                 String line;
 
                 while ((line = reader.readLine()) != null) {
@@ -55,37 +54,18 @@ public class Main {
                     }
 
                     totalLines++;
-
-                    try {
-                        LogEntry entry = new LogEntry(line);
-                        stats.addEntry(entry);
-
-                        UserAgent userAgent = entry.getUserAgent();
-                        String userAgentStr = line.substring(line.lastIndexOf('"') + 1);
-
-                        if (userAgentStr.contains("Googlebot")) {
-                            googleBotCount++;
-                        } else if (userAgentStr.contains("YandexBot")) {
-                            yandexBotCount++;
-                        }
-                    } catch (IllegalArgumentException e) {
-                        System.err.println("Пропущена некорректная строка: " + e.getMessage());
-                    }
+                    maxLength = Math.max(maxLength, length);
+                    minLength = Math.min(minLength, length);
                 }
+
+
+                reader.close();
+                fileReader.close();
 
                 System.out.println("\n--- Результаты анализа файла ---");
                 System.out.println("Общее количество строк в файле: " + totalLines);
-
-                if (totalLines > 0) {
-                    double yandexBotRatio = (double) yandexBotCount / totalLines * 100;
-                    double googleBotRatio = (double) googleBotCount / totalLines * 100;
-
-                    System.out.printf("Доля запросов от YandexBot: %.2f%%\n", yandexBotRatio);
-                    System.out.printf("Доля запросов от Googlebot: %.2f%%\n", googleBotRatio);
-                    System.out.printf("Средний трафик за час: %.2f байт/час\n", stats.getTrafficRate());
-                } else {
-                    System.out.println("Файл пуст.");
-                }
+                System.out.println("Длина самой длинной строки: " + maxLength);
+                System.out.println("Длина самой короткой строки: " + (minLength == Integer.MAX_VALUE ? 0 : minLength));
                 System.out.println("-------------------------------\n");
 
             } catch (FileNotFoundException e) {
