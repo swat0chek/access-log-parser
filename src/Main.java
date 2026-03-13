@@ -56,6 +56,33 @@ public class Main {
 
                     totalLines++;
 
+                    int lastQuoteIndex = line.lastIndexOf('"');
+                    if (lastQuoteIndex != -1) {
+                        int secondLastQuoteIndex = line.lastIndexOf('"', lastQuoteIndex - 1);
+                        if (secondLastQuoteIndex != -1) {
+                            String userAgent = line.substring(secondLastQuoteIndex + 1, lastQuoteIndex);
+
+                            int startBracket = userAgent.indexOf('(');
+                            int endBracket = userAgent.indexOf(')', startBracket);
+
+                            if (startBracket != -1 && endBracket != -1) {
+                                String firstBrackets = userAgent.substring(startBracket + 1, endBracket);
+                                String[] parts = firstBrackets.split(";");
+
+                                for (String part : parts) {
+                                    part = part.trim();
+                                    if (part.startsWith("Googlebot")) {
+                                        googleBotCount++;
+                                        break;
+                                    } else if (part.startsWith("YandexBot")) {
+                                        yandexBotCount++;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     try {
                         LogEntry entry = new LogEntry(line);
                         stats.addEntry(entry);
